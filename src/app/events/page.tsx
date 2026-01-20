@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
 import { Event } from '@/types/database';
+import { fetchEvents as fetchEventsFromSource } from '@/lib/events';
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -19,13 +19,7 @@ export default function EventsPage() {
 
   const fetchEvents = async () => {
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .order('start_date', { ascending: true });
-
-      if (error) throw error;
+      const data = await fetchEventsFromSource();
       setEvents(data || []);
     } catch (error) {
       console.error('Error fetching events:', error);
