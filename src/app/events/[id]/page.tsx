@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { Event, Review } from '@/types/database';
+import { Event } from '@/types/database';
 import EventInfoBox from '@/components/events/EventInfoBox';
 import EventReviews from '@/components/events/EventReviews';
+import { fetchEventById } from '@/lib/events';
 
 export default function EventDetailPage() {
   const params = useParams();
@@ -18,14 +18,7 @@ export default function EventDetailPage() {
 
   const fetchEvent = async () => {
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('id', params.id)
-        .single();
-
-      if (error) throw error;
+      const data = await fetchEventById(String(params.id));
       setEvent(data);
     } catch (error) {
       console.error('Error fetching event:', error);
@@ -65,18 +58,51 @@ export default function EventDetailPage() {
           )}
           
           <div className="p-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{event.title}</h1>
-            <p className="text-xl text-gray-600 mb-4">{event.artist}</p>
-            
-            <EventInfoBox event={event} />
-            
-            <div className="mt-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">공연 설명</h2>
-              <p className="text-gray-600 whitespace-pre-line">{event.description}</p>
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">{event.title}</h1>
+                <p className="text-xl text-gray-600">{event.artist}</p>
+              </div>
+              <div className="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-md text-sm font-medium">
+                공연 상세 정보를 확인하세요
+              </div>
             </div>
 
-            <div className="mt-8">
-              <EventReviews eventId={event.id} />
+            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-8">
+                <section>
+                  <h2 className="text-2xl font-semibold text-gray-900 mb-4">공연 소개</h2>
+                  <p className="text-gray-600 whitespace-pre-line">{event.description}</p>
+                </section>
+
+                {event.artist_profile && (
+                  <section>
+                    <h2 className="text-2xl font-semibold text-gray-900 mb-4">아티스트 소개</h2>
+                    <p className="text-gray-600 whitespace-pre-line">{event.artist_profile}</p>
+                  </section>
+                )}
+
+                {event.image_url && (
+                  <section>
+                    <h2 className="text-2xl font-semibold text-gray-900 mb-4">미디어</h2>
+                    <div className="rounded-lg overflow-hidden border border-gray-200">
+                      <img
+                        src={event.image_url}
+                        alt={`${event.title} 미디어`}
+                        className="w-full h-auto object-cover"
+                      />
+                    </div>
+                  </section>
+                )}
+
+                <section>
+                  <EventReviews eventId={event.id} />
+                </section>
+              </div>
+
+              <div className="lg:col-span-1">
+                <EventInfoBox event={event} />
+              </div>
             </div>
           </div>
         </div>
