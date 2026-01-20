@@ -1,7 +1,3 @@
-Need to install the following packages:
-supabase@2.24.3
-Ok to proceed? (y) 
-
 export interface Event {
   id: string;
   title: string;
@@ -10,8 +6,16 @@ export interface Event {
   start_date: string;
   end_date: string;
   venue: string;
+  venue_address?: string;
+  venue_lat?: number;
+  venue_lng?: number;
   genre: string;
   image_url?: string;
+  price_range?: string;
+  ticket_url?: string;
+  ticket_open_time?: string;
+  age_limit?: string;
+  artist_profile?: string;
   created_at: string;
   updated_at: string;
 }

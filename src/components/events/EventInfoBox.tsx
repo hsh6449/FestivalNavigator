@@ -45,6 +45,14 @@ export default function EventInfoBox({ event }: EventInfoBoxProps) {
               </svg>
               <span>{event.venue}</span>
             </div>
+            {event.venue_address && (
+              <div className="flex items-center text-gray-600">
+                <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18M4 6h16M4 18h16" />
+                </svg>
+                <span>{event.venue_address}</span>
+              </div>
+            )}
             <div className="flex items-center text-gray-600">
               <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -54,6 +62,27 @@ export default function EventInfoBox({ event }: EventInfoBoxProps) {
           </div>
         </div>
       </div>
+
+      {(event.price_range || event.ticket_url || event.ticket_open_time || event.age_limit) && (
+        <div className="mt-6 border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">티켓 정보</h3>
+          <div className="space-y-2 text-gray-600">
+            {event.price_range && <p>가격: {event.price_range}</p>}
+            {event.ticket_open_time && <p>티켓 오픈: {format(new Date(event.ticket_open_time), 'PPP p', { locale: ko })}</p>}
+            {event.age_limit && <p>관람 등급: {event.age_limit}</p>}
+            {event.ticket_url && (
+              <a
+                href={event.ticket_url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-indigo-600 hover:text-indigo-700"
+              >
+                티켓 예매 페이지
+              </a>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
-} 
+}

@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { Event, Review } from '@/types/database';
+import { Event } from '@/types/database';
 import EventInfoBox from '@/components/events/EventInfoBox';
 import EventReviews from '@/components/events/EventReviews';
+import { fetchEventById } from '@/lib/events';
 
 export default function EventDetailPage() {
   const params = useParams();
@@ -18,14 +18,7 @@ export default function EventDetailPage() {
 
   const fetchEvent = async () => {
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('id', params.id)
-        .single();
-
-      if (error) throw error;
+      const data = await fetchEventById(String(params.id));
       setEvent(data);
     } catch (error) {
       console.error('Error fetching event:', error);
@@ -74,6 +67,13 @@ export default function EventDetailPage() {
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">공연 설명</h2>
               <p className="text-gray-600 whitespace-pre-line">{event.description}</p>
             </div>
+
+            {event.artist_profile && (
+              <div className="mt-8">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">아티스트 소개</h2>
+                <p className="text-gray-600 whitespace-pre-line">{event.artist_profile}</p>
+              </div>
+            )}
 
             <div className="mt-8">
               <EventReviews eventId={event.id} />
