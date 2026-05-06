@@ -1,15 +1,25 @@
 'use client';
 
 import Script from 'next/script';
-import { useEffect } from 'react';
 
 export default function OneSignalInitializer() {
+  const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
+
+  if (!appId) {
+    return null;
+  }
+
   const handleScriptLoad = () => {
     if (typeof window !== 'undefined') {
-      window.OneSignal = window.OneSignal || [];
-      window.OneSignal.push(function() {
-        window.OneSignal.init({
-          appId: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!,
+      const oneSignal = window.OneSignal;
+
+      if (!oneSignal) {
+        return;
+      }
+
+      oneSignal.push(() => {
+        oneSignal.init({
+          appId,
           allowLocalhostAsSecureOrigin: true,
           notifyButton: {
             enable: false,

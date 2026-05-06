@@ -1,16 +1,6 @@
 import './globals.css';
-import { Geist, Geist_Mono } from "next/font/google";
 import OneSignalInitializer from '@/components/OneSignalInitializer';
-
-const geistSans = Geist({
-  subsets: ["latin"],
-  variable: "--font-geist-sans",
-});
-
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
-});
+import AppHeader from '@/components/AppHeader';
 
 export default function RootLayout({
   children,
@@ -22,10 +12,11 @@ export default function RootLayout({
       <head>
         <OneSignalInitializer />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className="antialiased">
+        <div className="min-h-screen bg-white text-slate-950">
+          <AppHeader />
+          {children}
+        </div>
       </body>
     </html>
   );

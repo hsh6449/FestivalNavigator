@@ -1,0 +1,168 @@
+# FestivalNavigator History
+
+## Resume Snapshot (2026-03-30)
+
+- 현재 제품 구조는 `admin canonical -> public event detail -> user planner overlay`까지 연결된 상태
+- admin 쪽은 day/stage/lineup/timetable/ticket 편집, hidden stage, import preview/diff, undo까지 usable baseline 확보
+- public 쪽은 day selector, overview mini preview, block click planner, partial selection, sticker drag, move overlay, `전체 / 문제만 / 선택한 것만` 보기까지 반영
+- 안정성 기준:
+  - `npm run lint` 경고 0
+  - `npm run build` 통과
+  - build 뒤에는 dev 서버를 다시 띄워야 localhost 500을 피할 수 있음
+- 다음 작업 축:
+  1. planner interaction polish 마감
+  2. admin redo / history polish
+  3. artist follow / notifications 연결
+
+## 2026-03-20
+
+- admin 라인업 편집을 `time board` 중심으로 개편
+- drag and drop으로 stage / time slot 이동 가능
+- day별 `visible start/end` 제어 추가
+- 기본 5분 간격 timeline grid 적용
+- timed block이 실제 시간을 점유하는 block형 레이아웃 적용
+- 블록 상단/하단 양방향 리사이즈로 `start_time`, `end_time` 즉시 수정 가능
+- 선택한 아티스트 블록을 우측 metadata inspector에서 수정 가능
+- 하단 긴 inline metadata 폼 제거
+- metadata는 우측 drawer에서만 수정하는 block-first 흐름으로 정리
+- 빈 artist row 기반의 유령 stage는 board에서 숨김
+- stage 컬럼 순서 변경 기능 추가
+- admin 저장 데이터가 public 이벤트 상세 조립 로직으로 이어지는 경로 재점검
+- 이벤트 상세 반영은 DB 저장 후 새로고침/재진입 기준으로 확인하는 구조
+- 시간이 없는 lineup row도 `note` 내부 metadata로 stage / stage order를 보존하도록 보강
+- admin stage 컬럼 순서를 public `/events/[id]` lineup / timetable 정렬에 반영하도록 조정
+- per-stage `TBD Queue`를 제거하고 day 단위 `Unscheduled Blocks` dock으로 전환
+- 미배치 카드를 stage timeline에 직접 드롭하면 날짜/stage/start/end가 즉시 반영되도록 조정
+- day header와 metadata drawer에서 `+ Stage 추가` 가능하도록 editor UX 확장
+- 빈 lineup 상태에서도 event 날짜 기준으로 stage 컬럼을 먼저 만들 수 있게 보강
+- metadata drawer의 stage 입력을 선택형 + quick add 흐름으로 단순화
+- `event_stages` 독립 테이블 초안과 migration 문서를 추가하고, admin/public 모두 stage 메타데이터를 우선 사용하도록 연결
+- `event_stages`가 없는 환경에서도 기존 lineup note metadata fallback으로 동작하도록 호환 처리
+- `event_board_settings` 독립 테이블 초안과 migration 문서를 추가하고, day별 visible start/end를 저장·복원하는 경로 추가
+- admin 탭 헤더에 `저장 중 / 미저장 변경 / 마지막 저장` 상태를 표시해 section별 진행 상황을 바로 보이도록 보강
+- public `/events/[id]`에서 stage 순서를 이벤트 전체 공통값이 아니라 `day별 stage order` 기준으로 계산하도록 수정
+- admin board에서 stage 이름 변경 흐름을 컬럼 헤더 inline 편집으로 보강
+- timeline drop 시 날짜 / stage / 시작 / 종료 시간을 한 번의 상태 변경으로 반영하도록 정리
+- Day1 / Day2 board normalization과 기본 timeline 범위를 같은 5분 기준으로 통일
+- drag and drop 이후 `display_order`, stage/day 배치, timeline slot 반영값이 저장 시 더 안정적으로 유지되도록 보강
+- block metadata drawer를 보드 왼쪽 쪽으로 옮겨 lineup timeline 가림을 줄임
+- metadata drawer에서 Start / End 시간을 `±5분` 버튼으로 빠르게 조정할 수 있게 보강
+- stage timeline 컬럼 전체를 drop target으로 확장해 선 위에 정확히 놓지 않아도 시간이 반영되도록 조정
+- timed block은 가운데 콘텐츠를 클릭할 때만 metadata drawer가 열리도록 조정
+- 저장/편집 피드백을 시스템 alert 대신 자동 소멸 toast와 알림 히스토리 패널로 전환
+- 자잘한 admin 편집 알림은 숨기고 저장/오류 중심의 toast만 유지하도록 조정
+- Event Basics에서 admin 상단 메뉴 순서를 직접 바꿀 수 있게 보강
+- public event 상세의 lineup / timetable을 시간축 기반 read-only board로 재구성
+- public event 상세에서는 빈 stage 컬럼과 내부용 상태 문구를 숨기도록 정리
+- public event 상세의 lineup / timetable은 Day selector로 하루씩 전환해서 보도록 개선
+- public event Day selector에 날짜/스테이지/하이라이트 요약을 붙여 더 빠르게 비교 가능하게 조정
+- public 상세 탭을 모바일에서 sticky tab bar처럼 유지하도록 보강
+- lineup / timetable 카드에서 planner CTA와 활성 상태를 더 직접적으로 노출
+- admin lineup / timetable 편집도 Day selector로 하루씩 전환할 수 있게 보강
+- `+ Day 추가`로 기존 데이터는 유지한 채 Day 2, Day 3 템플릿을 확장할 수 있게 정리
+- 선택한 Day 기준으로 artist block과 timetable row를 바로 추가할 수 있게 보강
+- 마지막 Day에는 `x` 버튼으로 삭제할 수 있게 하고, 데이터가 있으면 날짜를 직접 입력해야 삭제되도록 보호 절차 추가
+- 빈 stage는 admin에서 안전하게 삭제할 수 있도록 1차 lifecycle 액션 추가
+- public overview에 선택한 Day 기준 mini timetable preview 추가
+- public overview의 stage badge는 실제 act가 있는 stage만 보이도록 정리
+- public `/events/[id]`에서는 `내 일정에 담기` 팝업 대신 블록 클릭으로 planner 활성/비활성화하도록 전환
+- 활성 블록은 색으로 표시하고, 블록 안에서 입장/퇴장 범위를 5분 단위로 조절할 수 있게 보강
+- planner 검증은 같은 날짜의 기존 일정과 시간이 겹치는지만 체크하도록 조정
+- meal/rest/move/custom도 상세 팝업 없이 바로 planner에 추가하도록 단순화
+- public timetable에서는 별도 planner 레이어 카드 대신 같은 day sheet 안의 `My Plan` lane에 manual block이 바로 렌더되도록 재구성
+- public lineup / timetable 카드의 `클릭해 담기` 보조 UI를 걷어내고, block click과 색상 변화 중심의 planner UX로 더 단순화
+- planner toast는 자동 소멸되도록 정리하고, meal/rest/move/custom 추가 결과도 같은 흐름으로 통일
+- planner 모델을 `admin 원본 -> public 읽기 전용 -> user personal override` 구조로 명시하고, public 원본과의 재동기화 helper를 추가
+- 유저가 손대지 않은 performance selection은 source update를 따라가고, 범위를 조정한 block만 개인 override로 유지되도록 보강
+- public event와 My Timetable 양쪽에서 block reset / day reset / event reset을 제공해 원본 기준으로 쉽게 복귀할 수 있게 정리
+- public timetable block의 `선택됨` 텍스트 배지는 제거하고 색상 상태만으로 선택을 표현하도록 정리
+- public timetable의 첫 annotation 단계로, 선택된 일정과 manual planner sticker에 `from/to + gap minutes` 라벨을 직접 붙여 동선 맥락을 보이게 함
+- public active block의 `내 일정 시간` 텍스트는 제거하고 색만으로 선택 상태를 표현하도록 정리
+- planner 시간 조절은 `±5분` 버튼 대신 block 상단/하단 drag handle로 바꿔 색 영역 자체를 조정하는 방식으로 전환
+- manual planner asset은 `MEAL / REST / MOVE / NOTE` 타입 라벨을 붙이고, block 단위 삭제가 가능하도록 정리
+- `MOVE` asset은 화살표형 block으로 구분하고, timetable 위의 overlay arrow로 이전/다음 일정과 연결해 표시
+- public timetable의 planner 전용 `My Plan` lane은 제거하고, manual planner asset이 board 위 absolute overlay item으로 뜨도록 재구성
+- overview mini timetable에 남아 있던 planner lane 렌더 흔적을 제거해 overview/public layout이 planner UI에 영향받지 않도록 정리
+- 후속 확인 포인트는 move overlay arrow 가독성과 manual planner item의 시트 내 위치감 보강
+- manual planner asset 생성 위치는 더 이상 무조건 마지막 일정 뒤가 아니라, day 기준 첫 빈 시간대로 잡히도록 조정
+- manual planner asset은 visible timetable 범위를 벗어나면 overlay를 clamp해 혼자 아래로 길게 늘어나는 인상을 줄이도록 보강
+- manual planner asset에 stage chip을 추가하고, 선택한 stage가 있으면 해당 stage column 위에 overlay로 붙도록 정리
+- public overview의 stage count는 `event_stages` entity가 있으면 그 기준을 우선 보도록 조정해, stale fallback stage 이름만으로 개수가 다시 늘어나지 않게 정리
+- admin 메뉴 순서 persistence는 localStorage 복원 전에 기본값을 다시 저장하던 초기 effect 순서를 막고, hydrate 이후에만 저장하도록 보강
+- public timetable에서 performance block을 클릭할 때 `getLatestPlannerEnd` 참조가 끊겨 나던 런타임 에러를 import 복구로 수정
+- planner는 이제 performance block overlap 때문에 선택 자체를 막지 않고, 일단 여러 공연을 담은 뒤 색 영역으로 얼마나 볼지 나중에 조정할 수 있도록 validation을 완화
+- public timetable의 selection overlay와 manual planner asset에는 top/height/left/width 중심 transition을 넣어 색 영역 변화가 더 부드럽게 느껴지도록 정리
+- public planner에 soft conflict badge를 추가해, 겹친 선택은 차단하지 않고 `Overlap n` 경고로만 보여주도록 조정
+- The Glow 기준으로 unselected block은 흰색, active selection은 회색 계열로 정리해 원본 timetable과 개인 계획을 더 차분하게 구분하도록 보강
+- `move` overlay arrow는 슬레이트 계열 화살표와 라벨로 강화해, 이동 경로를 block보다 overlay로 읽게끔 방향을 틀기 시작함
+- `+ Move`는 더 이상 manual item을 바로 추가하지 않고, move mode를 켠 뒤 block 2개를 클릭해 overlay arrow를 만드는 흐름으로 전환
+- move mode에서는 첫 클릭 block을 `Move start`로 표시하고, 두 block 사이에 실제 이동 시간이 없으면 색 영역을 먼저 조정하라는 안내만 띄우도록 정리
+- move overlay는 더 이상 숨은 move block 위치나 정렬 순서에 의존하지 않고, source-target block id를 note metadata로 저장해서 정확한 두 block 사이에만 그리도록 보강
+- move manual item 자체는 시트 위 block으로 렌더하지 않도록 막아, Stage X 등에 이상한 동그라미가 남는 문제를 줄이도록 정리
+- public timetable에서 move overlay가 안 보이던 원인은 `move-link::sourceId::targetId` note parser 분해 순서 버그였고, source/target id를 올바르게 읽도록 수정
+- 추가로 planner item id 자체에 `::`가 포함되는 케이스 때문에 note split이 다시 깨질 수 있어, public timetable의 move parser를 candidate item 매칭 기반으로 보강
+- move overlay는 source/target column 상대 위치에 따라 시작점과 끝점을 좌우 반전할 수 있게 바꿔, 왼쪽 이동일 때도 자연스러운 방향으로 그리도록 조정
+- move overlay의 중간 라벨은 block 이름 나열 대신 `n분 이동` 중심의 짧은 메시지만 남기고, 배경 도형 없이 화살표 위 텍스트로 단순화
+- backward 이동이나 여러 column을 건너뛰는 move는 단순 곡선 대신 block 위쪽으로 한번 빠졌다가 내려오는 detour elbow path를 사용하도록 보강
+- move overlay 계산값 중 비정상 좌표가 생길 때 SVG `NaN` 속성으로 페이지가 깨지지 않도록 connector finite guard를 추가
+- block 내부에 중복으로 보이던 move pill은 제거하고, 이동 정보는 더 얇은 overlay 화살표와 짧은 `n분` 라벨 중심으로 정리
+- move overlay의 큰 detour elbow box 경로는 제거하고, source/target block edge를 잇는 더 짧은 cubic arch 경로로 바꿔 보드 가림을 줄이도록 정리
+- move overlay는 더 이상 overlap/tight gap에서 생성을 막지 않고, 화살표는 그대로 렌더한 뒤 `n m overlap` 같은 라벨로만 경고하도록 완화
+- public timetable의 move overlay는 화살표 자체를 클릭해 선택할 수 있고, 선택 시 근처에 작은 `×` 버튼이 떠서 보드 위에서 바로 삭제할 수 있도록 정리
+- 화살표 위치를 유저가 직접 조정하려면 현재의 자동 route 계산 외에 move별 `routeLift/controlOffset` 같은 offset metadata를 따로 저장하는 레이어가 필요하다는 결론을 다음 단계로 기록
+- move overlay arrow는 현재 단계에서 기본 선택/삭제까지는 usable하지만, 시각적으로 다소 지저분해 보여 추가 표현 실험은 잠시 보류하고 다음 planner 핵심 흐름으로 우선순위를 이동
+- meal/rest/custom manual planner item은 이제 스티커처럼 본체를 직접 drag해서 옮길 수 있고, 가장 가까운 stage column과 5분 단위 시간 슬롯으로 바로 snap되도록 정리
+- manual item의 stage chip 선택은 주된 제어에서 내려두고, 현재 stage는 작은 badge로만 보여주며 이동은 sticker drag 중심으로 단순화
+- manual sticker가 STAGE X에만 머물던 원인은 timed timetable column에 `stageColumnRefs`가 빠져 x축 snap이 실제 visible column을 못 보고 있던 버그였고, timed board column에도 ref를 연결해 stage 간 이동이 다시 동작하게 수정
+- planner sticker polish로 manual sticker는 새로 만들 때 같은 day의 최근 흐름 근처 stage/time에 더 가깝게 생성되도록 조정
+- drag 중에는 현재 붙을 target stage column을 highlight해서, sticker가 어디에 snap될지 시각적으로 더 쉽게 읽게 정리
+- sticker drag는 이제 stage 컬럼 중심 거리만 보지 않고, 실제 컬럼 경계 주변 hover를 우선해서 읽도록 완화해 x축 snap 감도를 조금 더 자연스럽게 조정
+- meal/rest는 조금 더 컴팩트하게, custom은 살짝 넓게 보여 타입별 스티커 밀도를 다르게 가져가도록 폭을 다듬음
+- manual sticker 생성은 더 이상 무조건 마지막 일정 뒤에 append하지 않고, 같은 day 안의 빈 gap을 먼저 찾아 거기에 배치한 뒤, 적당한 gap이 없을 때만 뒤로 이어붙이도록 조정
+- sticker 드래그 모션에는 더 긴 easing, 가벼운 scale, shadow 변화를 넣어 stage 사이를 옮길 때 이동 감이 조금 더 부드럽게 느껴지도록 보강
+- 부분 관람 색 영역은 선택된 구간만 회색으로 두는 대신, 선택 바깥 구간을 흰 마스크로 더 흐리게 처리하고 선택 범위에는 경계선을 넣어 start/end 읽기가 쉬워지도록 보강
+- meal/rest manual sticker는 기존 박스보다 작은 원형 badge에 가깝게 줄이고, 위치 자체가 의미가 되도록 내부 텍스트를 최소화해 더 직관적으로 정리
+- planner quick actions는 `Sticker(Meal / Rest / Note)` 묶음과 별도 `Move` 버튼으로 나눠, 추가 액션과 연결 액션의 역할이 더 직관적으로 읽히게 단순화
+- custom sticker는 note 성격에 맞게 조금 더 컴팩트하게 줄이고, 시간은 시작 시각 위주로만 보여 전체 시트 밀도를 덜 해치도록 정리
+- admin stage lifecycle에 `숨기기 / 복구`를 추가하고, hidden stage도 `event_stages` payload와 lineup signature에 같이 포함시켜 public이 숨김 상태를 그대로 따르게 정리
+- day별 hidden stage는 admin 보드 상단의 restore UI에서 다시 visible stage로 되돌릴 수 있게 연결
+- import workspace에 preview/diff를 추가해 lineup/timetable TSV를 바로 반영하기 전에 `추가 / 수정 / 동일` 개수를 요약하고, 샘플 변경점을 먼저 검수할 수 있게 정리
+- admin empty state action을 전반적으로 강화해, 등록된 이벤트가 없을 때 Festival / Concert를 바로 만들고, import 이미지 / lineup / stage / timetable / ticket 비어 있는 화면에서도 즉시 다음 액션으로 이어질 수 있게 정리
+- import 이미지 empty state에서는 이미지 선택과 import 타깃 전환을 바로 제공하고, lineup 빈 상태에서는 `아티스트 추가`, `+ Stage`, `import 이동`을 바로 실행할 수 있게 보강
+- timetable empty state에서는 `선택한 Day 행 추가`와 import 이동을, ticket empty state에서는 첫 링크 추가를 바로 제공하도록 단순화
+- admin lineup / timetable 편집에는 snapshot history 기반 `Undo`를 1차 반영해, drag/drop, resize, stage/day 변경, import, add/delete 같은 구조 편집을 최근 상태 기준으로 되돌릴 수 있게 정리
+- timetable inline field edit는 `focus` 시점에만 snapshot을 남겨 한 글자마다 history가 쌓이지 않게 했고, lineup/timetable header에 바로 `Undo` 버튼을 노출
+- 이벤트 로드, 새 이벤트 생성, editor 닫기 시점에는 undo stack을 초기화해 이벤트 간 history가 섞이지 않도록 정리
+- admin 메뉴 순서가 다시 초기화돼 보이던 원인은 `localStorage`가 포트별 origin 기준이라 `localhost:3000`과 `localhost:3001` 사이에서 값이 이어지지 않던 점으로 확인
+- admin 메뉴 순서는 `localStorage`에 더해 `cookie(path=/, 1년)`에도 함께 저장하고, 로드 시에는 cookie를 우선 읽도록 바꿔 포트가 바뀌어도 더 안정적으로 유지되게 보강
+- timetable/admin 편집 undo는 현재 구조상 action sequence보다 snapshot history 방식이 더 안전하다는 결론을 남기고, drag/resize/hide/restore/import 반영 직전 상태를 짧게 되돌리는 방향으로 후속 설계를 잡음
+
+## 다음 기록 포인트
+
+- 유저용 `/events/[id]` 편집 보드 재사용
+- 개인 timetable 저장과 충돌 감지 연결
+
+## 2026-03-26
+
+- planner conflict/feedback polish 단계에서 `문제만 보기`와 `선택한 것만 보기`가 단순 opacity가 아니라 관련 있는 stage만 남기도록 바뀌어, 실제 수정 범위를 더 직접적으로 좁혀 보게 정리
+- 같은 모드에서 관련 stage가 하나도 없을 땐 빈 보드 대신 안내 상태와 `전체 보기로 돌아가기` 액션을 보여주고, timetable 상단에도 현재 보기 모드에 맞는 짧은 가이드를 추가
+- 이번 라운드 후에도 `npm run build` 뒤 깨진 dev 프로세스를 다시 정리해 `localhost:3000`을 200 OK로 재기동
+- build warning cleanup을 완료해 `npm run lint` 경고를 0으로 만들고, `events / event detail / admin import preview`의 `<img>`를 `next/image`로 전환했으며 `EventReviews`, `NotificationButton`, `EventsPage`, `EventDetailPage`, `AdminEventsPage`의 effect dependency를 정리
+- `next.config.ts`에 remote image 허용 범위를 추가해 실제 행사 대표 이미지와 외부 포스터 URL을 `next/image`로 그대로 렌더할 수 있게 맞춤
+- `npm run build`도 다시 green으로 통과시켰고, build 직후에는 stale dev 프로세스를 정리한 뒤 `npm run dev`를 다시 띄워 `localhost:3000`을 200 OK 상태로 복구
+- admin 메뉴 순서가 포트 변경(`localhost:3000` ↔ `3001`) 시 초기화돼 보이던 원인을 `localStorage` origin 차이로 확인하고, localStorage와 cookie를 함께 써서 더 안정적으로 복원되게 보강
+- admin lineup/timetable 편집에는 snapshot history 기반 `Undo`를 추가해 drag/drop, resize, stage/day 변경, import, add/delete와 inline timetable edit 이전 상태를 빠르게 되돌릴 수 있게 정리
+- admin empty state action을 강화해, 이벤트가 없을 때는 Festival/Concert 생성을 바로 제안하고, import/lineup/stage/timetable/ticket이 비어 있을 때도 즉시 다음 액션으로 이동할 수 있게 보강
+- build 안정화 단계에서 dead code, OneSignal 전역 타입, public planner helper를 정리해 `npm run build`가 다시 green으로 통과하도록 복구
+- Google font fetch 의존을 제거해 제한된 네트워크 환경에서도 production build가 막히지 않게 조정하고, 남은 hook dependency 및 `<img>` warning은 후속 warning cleanup 묶음으로 분리
+- planner sticker는 drag 중에 붙을 stage/time 프리뷰를 바로 보여주고, 생성 시에도 day 안의 더 적절한 빈 gap을 우선 찾도록 다듬어 기본 배치 흐름을 더 자연스럽게 정리
+- 부분 관람 범위는 handle drag 외에도 block 안의 흰 마스크 영역을 눌러 빠르게 입장/퇴장 시점을 조정할 수 있게 보강
+- planner conflict/feedback는 `Overlap`과 `Tight move`를 분리해 block 및 day 헤더에서 따로 읽을 수 있게 정리하고, 충돌은 막지 않고 나중에 조정하는 흐름을 더 분명하게 만듦
+- 개발용 `localhost:3000`은 오래 남아 있던 깨진 dev 프로세스를 정리하고 새 dev 서버를 다시 띄워 한 포트 기준으로 안정화
+- timetable planner에는 `문제만 보기` 집중 모드를 추가해 overlap/tight move가 없는 block은 옅게 두고, 먼저 손봐야 할 일정만 빠르게 읽을 수 있게 정리
+- `next build`와 `next dev`가 같은 `.next` 디렉터리를 동시에 건드리면 dev manifest가 깨져 500이 날 수 있어, build 검증 뒤에는 dev 서버를 다시 재기동하는 운영 흐름을 확인
+- planner interaction polish 마감 단계에서 day 헤더에 전체 이슈 수를 압축해 보여주고, stage 컬럼별 issue count와 집중 모드 opacity를 추가해 수정 우선순위를 더 빠르게 읽을 수 있게 정리
+- overlap/tight move 정보는 블록·헤더·stage 수준에 맞춰 분산시키고, 불필요한 중복 legend는 줄여 실제 timetable 편집 시 시야를 덜 가리도록 조정
+- public event polish 단계에서 overview 미니 timetable에 `이 Day 일정 짜기` 진입점을 추가하고, 상세 페이지 설명을 내부 구현 중심 표현에서 사용자 중심 표현으로 다시 정리
+- planner tips는 가벼운 action card처럼 보이도록 바꾸고, overview의 보조 정보 중 `Data Sync Plan`처럼 내부용 성격이 강한 섹션은 public에서 덜 전면에 나오도록 정리
+- planner 보기 모드는 `전체 / 문제만 / 선택한 것만` 3단계로 확장해, 사용자가 이미 담아둔 세트만 빠르게 확인하거나 문제 있는 구간만 집중해서 보는 흐름을 지원

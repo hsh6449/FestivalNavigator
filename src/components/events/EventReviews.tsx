@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useCallback, useEffect, useState } from 'react';
+import { createClient, hasSupabaseEnv } from '@/lib/supabase/client';
 import { Review } from '@/types/database';
 
 interface EventReviewsProps {
@@ -11,24 +11,24 @@ interface EventReviewsProps {
 type SortOption = 'latest' | 'rating';
 
 export default function EventReviews({ eventId }: EventReviewsProps) {
+  const isSupabaseReady = hasSupabaseEnv();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [newReview, setNewReview] = useState({ rating: 5, content: '' });
   const [sortBy, setSortBy] = useState<SortOption>('latest');
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchReviews();
-    fetchCurrentUser();
-  }, [eventId]);
+  const fetchCurrentUser = useCallback(async () => {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    } catch {
+      setCurrentUserId(null);
+    }
+  }, []);
 
-  const fetchCurrentUser = async () => {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    setCurrentUserId(user?.id || null);
-  };
-
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     try {
       const supabase = createClient();
       const { data, error } = await supabase
@@ -39,12 +39,23 @@ export default function EventReviews({ eventId }: EventReviewsProps) {
 
       if (error) throw error;
       setReviews(data || []);
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
+    } catch {
+      setReviews([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [eventId]);
+
+  useEffect(() => {
+    if (!isSupabaseReady) {
+      setLoading(false);
+      setCurrentUserId(null);
+      return;
+    }
+
+    void fetchReviews();
+    void fetchCurrentUser();
+  }, [fetchCurrentUser, fetchReviews, isSupabaseReady]);
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,10 +163,18 @@ export default function EventReviews({ eventId }: EventReviewsProps) {
         </div>
         <button
           type="submit"
-          className="bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 transition-colors"
+          disabled={!currentUserId}
+          className="bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           리뷰 작성
         </button>
+        {!currentUserId && (
+          <p className="mt-3 text-sm text-gray-500">
+            {isSupabaseReady
+              ? '로그인한 사용자만 리뷰를 남길 수 있습니다.'
+              : 'Supabase를 연결하면 리뷰 기능을 사용할 수 있습니다.'}
+          </p>
+        )}
       </form>
 
       <div className="space-y-6">
